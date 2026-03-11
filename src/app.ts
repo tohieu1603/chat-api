@@ -1,0 +1,53 @@
+import 'reflect-metadata';
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
+import { envConfig } from './config/env.config';
+import { swaggerSpec } from './config/swagger.config';
+import { errorHandler, apiRateLimiter, requestLogger } from './middlewares';
+import authRoutes from './routes/auth.routes';
+import adminUserRoutes from './routes/admin-user.routes';
+import apiKeyRoutes from './routes/api-key.routes';
+
+const app = express();
+
+// Security middleware
+app.use(helmet());
+app.use(cors({ origin: envConfig.cors.origin, credentials: true }));
+app.use(cookieParser());
+
+// Body parsing
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Logging & rate limiting
+app.use(requestLogger);
+app.use('/api', apiRateLimiter);
+
+// Health check
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Swagger docs
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api/docs.json', (_req, res) => {
+  res.json(swaggerSpec);
+});
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/api-keys', apiKeyRoutes);
+
+// 404 handler
+app.use((_req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
+});
+
+// Error handler (must be last)
+app.use(errorHandler);
+
+export { app };
