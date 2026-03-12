@@ -6,12 +6,13 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { envConfig } from './config/env.config';
 import { swaggerSpec } from './config/swagger.config';
-import { errorHandler, requestLogger } from './middlewares';
+import { errorHandler, requestLogger, mcpRateLimiter } from './middlewares';
 import authRoutes from './routes/auth.routes';
 import adminUserRoutes from './routes/admin-user.routes';
 import apiKeyRoutes from './routes/api-key.routes';
 import companyRoutes from './routes/company.routes';
 import byteplusProxyRoutes from './routes/byteplus-proxy.routes';
+import mcpRouter from './mcp/mcp-router';
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/byteplus', byteplusProxyRoutes);
+app.use('/mcp', mcpRateLimiter, mcpRouter);
 
 // 404 handler
 app.use((_req, res) => {

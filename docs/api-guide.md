@@ -125,7 +125,43 @@ POST /api/auth/refresh
 
 ---
 
-### 1.5 Get Profile
+### 1.5 Change Password
+
+```
+POST /api/auth/change-password
+```
+
+> Requires: Cookie auth
+
+**Request:**
+```json
+{
+  "currentPassword": "OldPassword1",
+  "newPassword": "NewPassword2"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+**Error (400) - wrong current password:**
+```json
+{
+  "success": false,
+  "message": "Current password is incorrect"
+}
+```
+
+> Sets `mustChangePassword` to `false`. Invalidates all existing refresh tokens.
+
+---
+
+### 1.6 Get Profile
 
 ```
 GET /api/auth/profile
@@ -289,10 +325,11 @@ DELETE /api/companies/:id
 
 ---
 
-## 3. User Management (Admin + Manager)
+## 3. User Management (Admin + Director + Manager)
 
 > - **Admin**: sees/manages ALL users, any role, any company
-> - **Manager**: sees/manages ONLY users in their own company, can only assign `director` or `employee` roles
+> - **Director**: sees/manages users in their own company, can assign `manager` or `employee` roles
+> - **Manager**: sees/manages ONLY users in their own company, can only assign `employee` role
 
 ### 3.1 List Users
 
@@ -300,54 +337,17 @@ DELETE /api/companies/:id
 GET /api/admin/users?page=1&limit=10
 ```
 
-**Admin Response (200) - sees all users:**
+**Response (200):**
 ```json
 {
   "success": true,
   "message": "Success",
-  "data": [
-    {
-      "id": "uuid",
-      "email": "e@gmail.com",
-      "fullName": "User E",
-      "role": "director",
-      "isActive": true,
-      "position": "Giám đốc sản xuất",
-      "companyId": "5de905cc-...",
-      "createdAt": "...",
-      "updatedAt": "..."
-    }
-  ],
-  "meta": {
-    "total": 9,
-    "page": 1,
-    "limit": 10,
-    "totalPages": 1
-  }
+  "data": [{ "id": "uuid", "email": "e@gmail.com", "fullName": "User E", "role": "director", "isActive": true, "position": "Giám đốc sản xuất", "companyId": "5de905cc-...", "createdAt": "...", "updatedAt": "..." }],
+  "meta": { "total": 9, "page": 1, "limit": 10, "totalPages": 1 }
 }
 ```
 
-**Manager A Response (200) - only Company A users:**
-```json
-{
-  "success": true,
-  "message": "Success",
-  "data": [
-    { "email": "c@gmail.com", "role": "employee", "position": "Nhân viên kỹ thuật", "companyId": "9d320885-..." },
-    { "email": "b@gmail.com", "role": "director", "position": "Giám đốc kinh doanh", "companyId": "9d320885-..." },
-    { "email": "a@gmail.com", "role": "manager", "position": "Quản lý Company A", "companyId": "9d320885-..." }
-  ],
-  "meta": { "total": 3, "page": 1, "limit": 10, "totalPages": 1 }
-}
-```
-
-**Employee/Director Response (403):**
-```json
-{
-  "success": false,
-  "message": "Access forbidden"
-}
-```
+> Admin sees all users globally. Director/Manager see only their own company users. Employee/Director without manage rights → 403.
 
 ---
 
@@ -404,7 +404,7 @@ POST /api/admin/users
 }
 ```
 
-**Manager Request (only director/employee, companyId auto-set):**
+**Director/Manager Request (companyId auto-set):**
 ```json
 {
   "email": "new-emp@gmail.com",
@@ -434,11 +434,11 @@ POST /api/admin/users
 }
 ```
 
-**Manager tries to create admin (blocked):**
+**Manager tries to create director/admin (blocked):**
 ```json
 {
   "success": false,
-  "message": "Managers can only create director or employee accounts"
+  "message": "Managers can only create employee accounts"
 }
 ```
 
@@ -487,11 +487,11 @@ PUT /api/admin/users/:id
 }
 ```
 
-**Manager tries to assign admin role (blocked):**
+**Manager tries to assign director/admin role (blocked):**
 ```json
 {
   "success": false,
-  "message": "Managers can only assign director or employee roles"
+  "message": "Managers can only assign employee roles"
 }
 ```
 
@@ -527,11 +527,11 @@ DELETE /api/admin/users/:id
 }
 ```
 
-**Manager deletes admin/manager (blocked):**
+**Manager deletes admin/manager/director (blocked):**
 ```json
 {
   "success": false,
-  "message": "Managers cannot delete admin or manager accounts"
+  "message": "Managers cannot delete admin, director or manager accounts"
 }
 ```
 
@@ -693,10 +693,12 @@ All errors follow this format:
 | id | UUID | Auto-generated |
 | email | string | Unique, normalized lowercase |
 | fullName | string | 2-100 chars |
-| role | enum | `admin`, `manager`, `director`, `employee` |
+| role | enum | `admin`, `director`, `manager`, `employee` |
 | isActive | boolean | Account active status |
 | position | string\|null | Job position/title (max 100 chars) |
 | companyId | UUID\|null | FK to company (null for admin) |
+| mustChangePassword | boolean | Forces password change on next login (default: false) |
+| createdBy | UUID\|null | FK self-ref: user who created this account (nullable) |
 | createdAt | datetime | ISO 8601 |
 | updatedAt | datetime | ISO 8601 |
 
@@ -704,16 +706,65 @@ All errors follow this format:
 
 ## 8. Roles & Permissions Summary
 
-| Role | Manage Companies | Manage Users | Scope |
-|------|-----------------|--------------|-------|
-| **admin** | Full CRUD | Full CRUD, any role | Global |
-| **manager** | No access | CRUD director/employee | Own company only |
-| **director** | No access | No access | - |
-| **employee** | No access | No access | - |
+Role hierarchy (higher number = more privilege): `admin(4) > director(3) > manager(2) > employee(1)`
+
+| Role | Level | Manage Companies | Manage Users | Scope |
+|------|-------|-----------------|--------------|-------|
+| **admin** | 4 | Full CRUD | Full CRUD, any role | Global |
+| **director** | 3 | No access | CRUD manager + employee | Own company only |
+| **manager** | 2 | No access | CRUD employee only | Own company only |
+| **employee** | 1 | No access | No access | - |
 
 ---
 
-## 9. Test Accounts
+## 9. MCP Server
+
+Stateless Streamable HTTP endpoint for AI agent integration (Model Context Protocol).
+
+```
+POST /mcp
+```
+
+> Requires: Admin authentication (cookie or API key). Rate limited: 30 req/min per IP.
+
+**Available Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `create_user_account` | Creates user in caller's company. Auto-generates email from fullName + companyName (Vietnamese diacritics removed). Uses `DEFAULT_USER_PASSWORD`. Sets `mustChangePassword=true`. |
+| `list_roles` | Returns assignable roles (director, manager, employee) with hierarchy levels. Admin role excluded. |
+
+**`create_user_account` parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| fullName | string (min 2) | Yes | Full name (Vietnamese supported) |
+| role | `director`\|`manager`\|`employee` | Yes | Role to assign |
+| email | string (email) | No | If omitted, auto-generated from fullName + companyName |
+| position | string | No | Job title, e.g. "Giám đốc kinh doanh" |
+
+**Email auto-generation:** `nguyen.van.a@companya.com` — uses `remove-accents` lib, appends numeric suffix on conflict.
+
+**Request format (JSON-RPC 2.0):**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "create_user_account",
+    "arguments": {
+      "fullName": "Nguyễn Văn A",
+      "role": "employee",
+      "position": "Nhân viên kinh doanh"
+    }
+  },
+  "id": 1
+}
+```
+
+---
+
+## 10. Test Accounts
 
 | Email | Password | Role | Position | Company |
 |-------|----------|------|----------|---------|
@@ -726,7 +777,7 @@ All errors follow this format:
 
 ---
 
-## 10. Swagger Docs
+## 11. Swagger Docs
 
 Interactive API docs: `https://beoperischat.operis.vn/api/docs`
 

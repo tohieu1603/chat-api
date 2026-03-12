@@ -8,7 +8,8 @@ Express.js REST API with JWT cookie-based authentication and role-based access c
 - **Framework**: Express.js 5 + TypeScript
 - **Database**: PostgreSQL via TypeORM
 - **Auth**: JWT (httpOnly cookies) + bcryptjs
-- **Validation**: class-validator + class-transformer
+- **Validation**: class-validator + class-transformer + zod (MCP tools)
+- **MCP**: @modelcontextprotocol/sdk (Streamable HTTP, stateless)
 - **Docs**: Swagger UI (swagger-jsdoc + swagger-ui-express)
 - **Security**: helmet, cors, express-rate-limit
 
@@ -60,6 +61,7 @@ See `.env.example` for all variables. Key settings:
 | JWT_ACCESS_EXPIRATION | 15m | Access token TTL |
 | JWT_REFRESH_EXPIRATION | 7d | Refresh token TTL |
 | CORS_ORIGIN | http://localhost:3000 | Allowed origin |
+| DEFAULT_USER_PASSWORD | Welcome@123 | Default password for MCP-created accounts |
 
 ## API Endpoints
 
@@ -71,17 +73,26 @@ See `.env.example` for all variables. Key settings:
 | POST | /api/auth/login | Public | Login, sets cookies |
 | POST | /api/auth/logout | Required | Clear auth cookies |
 | POST | /api/auth/refresh | Public | Refresh access token |
+| POST | /api/auth/change-password | Required | Change password, clears mustChangePassword flag |
 | GET | /api/auth/profile | Required | Get current user |
 
 ### Admin - Users (`/api/admin/users`)
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | /api/admin/users | Admin | List users (paginated) |
-| POST | /api/admin/users | Admin | Create user with role |
-| GET | /api/admin/users/:id | Admin | Get user by ID |
-| PUT | /api/admin/users/:id | Admin | Update user |
-| DELETE | /api/admin/users/:id | Admin | Soft delete user |
+| GET | /api/admin/users | Admin/Director/Manager | List users (paginated, scoped by role) |
+| POST | /api/admin/users | Admin/Director/Manager | Create user with role |
+| GET | /api/admin/users/:id | Admin/Director/Manager | Get user by ID |
+| PUT | /api/admin/users/:id | Admin/Director/Manager | Update user |
+| DELETE | /api/admin/users/:id | Admin/Director/Manager | Soft delete user |
+
+### MCP Server (`/mcp`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | /mcp | Admin only | MCP Streamable HTTP endpoint (JSON-RPC 2.0, 30 req/min) |
+
+Tools: `create_user_account`, `list_roles`
 
 ### Other
 
@@ -116,17 +127,19 @@ npm run typeorm  # TypeORM CLI
 ```
 src/
 ├── config/          # env, database, swagger configuration
-├── constants/       # roles, error message constants
+├── constants/       # roles (with ROLE_HIERARCHY), error message constants
 ├── controllers/     # request handlers
-├── dtos/            # input validation classes
-├── entities/        # TypeORM entities
+├── dtos/            # input validation classes (class-validator)
+├── entities/        # TypeORM entities (User, Company, ApiKey, RefreshToken)
 ├── interfaces/      # TypeScript interfaces
+├── mcp/             # MCP server router + tools (create_user_account, list_roles)
+│   └── tools/
 ├── middlewares/     # auth, error handling, rate limiting, logging
 ├── repositories/    # data access layer
 ├── routes/          # Express router definitions
 ├── seeds/           # database seed scripts
 ├── services/        # business logic
-├── utils/           # jwt, password, cookie, response helpers
+├── utils/           # jwt, password, cookie, response, email-generator helpers
 ├── app.ts           # Express app setup
 └── server.ts        # Server entry point
 ```
@@ -135,10 +148,11 @@ src/
 
 - JWT stored in httpOnly cookies (not localStorage)
 - Passwords hashed with bcrypt (12 rounds)
-- Rate limiting: 100 req/15min general, 10 req/15min auth
+- Rate limiting: 100 req/15min general, 10 req/15min auth, 30 req/min MCP
 - Helmet sets security headers
-- Input validation via class-validator on all DTOs
+- Input validation via class-validator on all DTOs; zod on MCP tool inputs
 - Soft delete preserves user records
+- MCP endpoint admin-only (role guard + API key auth supported)
 
 ## Next Steps
 

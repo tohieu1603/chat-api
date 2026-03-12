@@ -27,6 +27,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsUUID('4', { message: 'Mã công ty không hợp lệ' })
   companyId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  mustChangePassword?: boolean;
 }
 
 export class UpdateUserDto {
@@ -66,6 +70,8 @@ export class UserResponseDto {
   isActive!: boolean;
   position?: string | null;
   companyId?: string | null;
+  mustChangePassword!: boolean;
+  createdBy?: string | null;
   createdAt!: Date;
   updatedAt!: Date;
 
@@ -78,6 +84,8 @@ export class UserResponseDto {
     dto.isActive = user.isActive;
     dto.position = user.position ?? null;
     dto.companyId = user.companyId ?? null;
+    dto.mustChangePassword = user.mustChangePassword ?? false;
+    dto.createdBy = user.createdBy ?? null;
     dto.createdAt = user.createdAt;
     dto.updatedAt = user.updatedAt;
     return dto;

@@ -32,17 +32,18 @@ const seedAdmin = async (): Promise<void> => {
       companyMap[c.name] = company;
     }
 
-    // Seed users: admin (no company), managers + employees per company
+    // Seed users: admin (no company), director + manager + employees per company
+    // Hierarchy: admin(4) > director(3) > manager(2) > employee(1)
     const seedUsers = [
-      // Admin - no company
+      // Admin - no company (system-level)
       { email: 'admin@gmail.com', password: 'admin123', fullName: 'System Admin', role: UserRole.ADMIN, position: 'System Administrator', company: null },
-      // Company A: manager + employees
+      // Company A: director + manager + employee
+      { email: 'b@gmail.com', password: 'b123456789', fullName: 'Director B', role: UserRole.DIRECTOR, position: 'Giám đốc Company A', company: 'Company A' },
       { email: 'a@gmail.com', password: 'a123456789', fullName: 'Manager A', role: UserRole.MANAGER, position: 'Quản lý Company A', company: 'Company A' },
-      { email: 'b@gmail.com', password: 'b123456789', fullName: 'User B', role: UserRole.DIRECTOR, position: 'Giám đốc kinh doanh', company: 'Company A' },
       { email: 'c@gmail.com', password: 'c123456789', fullName: 'User C', role: UserRole.EMPLOYEE, position: 'Nhân viên kỹ thuật', company: 'Company A' },
-      // Company B: manager + employees
+      // Company B: director + manager
+      { email: 'e@gmail.com', password: 'e123456789', fullName: 'Director E', role: UserRole.DIRECTOR, position: 'Giám đốc Company B', company: 'Company B' },
       { email: 'd@gmail.com', password: 'd123456789', fullName: 'Manager D', role: UserRole.MANAGER, position: 'Quản lý Company B', company: 'Company B' },
-      { email: 'e@gmail.com', password: 'e123456789', fullName: 'User E', role: UserRole.DIRECTOR, position: 'Giám đốc sản xuất', company: 'Company B' },
     ];
 
     for (const u of seedUsers) {

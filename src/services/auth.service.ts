@@ -139,6 +139,24 @@ export class AuthService {
     return this.generateAndStoreTokens(user, matchedToken.family, meta);
   }
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await userRepository.findByIdWithPassword(userId);
+    if (!user) throw AppError.notFound(USER_ERRORS.not_found);
+
+    const isMatch = await comparePassword(currentPassword, user.password);
+    if (!isMatch) throw AppError.badRequest(AUTH_ERRORS.wrong_password);
+
+    const isSame = await comparePassword(newPassword, user.password);
+    if (isSame) throw AppError.badRequest(AUTH_ERRORS.same_password);
+
+    user.password = await hashPassword(newPassword);
+    user.mustChangePassword = false;
+    await userRepository.save(user);
+
+    // Invalidate all existing refresh tokens after password change
+    await refreshTokenRepository.revokeAllByUserId(userId, 'password_change');
+  }
+
   async getProfile(userId: string): Promise<UserResponseDto> {
     const user = await userRepository.findById(userId);
     if (!user) {

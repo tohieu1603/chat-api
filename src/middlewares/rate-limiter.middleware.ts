@@ -12,6 +12,18 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// MCP endpoint rate limit (30 req/min per IP)
+export const mcpRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: {
+    success: false,
+    message: 'Quá nhiều yêu cầu MCP, vui lòng thử lại sau',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // General API rate limit
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

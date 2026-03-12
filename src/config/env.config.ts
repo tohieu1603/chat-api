@@ -30,4 +30,5 @@ export const envConfig = {
     // Comma-separated origins: "http://localhost:3000,http://localhost:50051"
     origin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(o => o.trim()),
   },
+  defaultUserPassword: process.env.DEFAULT_USER_PASSWORD || 'Welcome@123',
 };

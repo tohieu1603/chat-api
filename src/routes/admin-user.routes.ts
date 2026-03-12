@@ -8,8 +8,8 @@ import { UserRole } from '../constants/roles.constant';
 
 const router = Router();
 
-// Admin + Manager can manage users (manager is scoped to their company in service layer)
-const guard = [authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.MANAGER)];
+// Admin + Director + Manager can manage users (scoped by role in service layer)
+const guard = [authenticateToken, authorizeRoles(UserRole.ADMIN, UserRole.DIRECTOR, UserRole.MANAGER)];
 
 /**
  * @swagger

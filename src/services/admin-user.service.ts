@@ -6,14 +6,23 @@ import { UserRole } from '../constants/roles.constant';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from '../dtos/user.dto';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
-// Roles a manager is allowed to assign (cannot create admin or other managers)
-const MANAGER_ALLOWED_ROLES: UserRole[] = [UserRole.DIRECTOR, UserRole.EMPLOYEE];
+// Director can manage manager + employee in same company
+const DIRECTOR_ALLOWED_ROLES: UserRole[] = [UserRole.MANAGER, UserRole.EMPLOYEE];
+// Manager can manage employee only in same company
+const MANAGER_ALLOWED_ROLES: UserRole[] = [UserRole.EMPLOYEE];
+
+/** Get allowed roles for the caller's role level */
+function getAllowedRoles(callerRole: UserRole): UserRole[] {
+  if (callerRole === UserRole.DIRECTOR) return DIRECTOR_ALLOWED_ROLES;
+  if (callerRole === UserRole.MANAGER) return MANAGER_ALLOWED_ROLES;
+  return [];
+}
 
 export class AdminUserService {
   /**
    * Get all users.
    * Admin: sees all users.
-   * Manager: sees only users in their company.
+   * Director/Manager: sees only users in their company.
    */
   async getAllUsers(
     page: number,
@@ -27,7 +36,8 @@ export class AdminUserService {
     if (caller.role === UserRole.ADMIN) {
       [users, total] = await userRepository.findAllPaginated(page, limit, search);
     } else {
-      // Manager: scoped to their company
+      // Director + Manager: see all users in their company (read-all).
+      // Write operations (create/update/delete) are further scoped by getAllowedRoles.
       if (!caller.companyId) throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
       [users, total] = await userRepository.findByCompanyPaginated(caller.companyId, page, limit, search);
     }
@@ -38,7 +48,7 @@ export class AdminUserService {
   /**
    * Get user by ID.
    * Admin: any user.
-   * Manager: only users in their company.
+   * Director/Manager: only users in their company.
    */
   async getUserById(id: string, caller: JwtPayload): Promise<UserResponseDto> {
     const user = caller.role === UserRole.ADMIN
@@ -54,19 +64,23 @@ export class AdminUserService {
   /**
    * Create user.
    * Admin: any role, any company.
-   * Manager: only director/employee roles, forced to their company.
+   * Director: manager/employee roles, forced to their company.
+   * Manager: employee role only, forced to their company.
    */
   async createUser(dto: CreateUserDto, caller: JwtPayload): Promise<UserResponseDto> {
     const existing = await userRepository.findByEmail(dto.email);
     if (existing) throw AppError.conflict(AUTH_ERRORS.email_taken);
 
-    // Manager restrictions
-    if (caller.role === UserRole.MANAGER) {
-      if (!MANAGER_ALLOWED_ROLES.includes(dto.role)) {
-        throw AppError.forbidden('Quản lý chỉ có thể tạo tài khoản giám đốc hoặc nhân viên');
+    // Director/Manager restrictions
+    if (caller.role === UserRole.DIRECTOR || caller.role === UserRole.MANAGER) {
+      const allowedRoles = getAllowedRoles(caller.role);
+      if (!allowedRoles.includes(dto.role)) {
+        const label = caller.role === UserRole.DIRECTOR
+          ? 'Giám đốc chỉ có thể tạo tài khoản quản lý hoặc nhân viên'
+          : 'Quản lý chỉ có thể tạo tài khoản nhân viên';
+        throw AppError.forbidden(label);
       }
       if (!caller.companyId) throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
-      // Force company to manager's company
       dto.companyId = caller.companyId;
     }
 
@@ -78,6 +92,8 @@ export class AdminUserService {
       role: dto.role,
       position: dto.position || null,
       companyId: dto.companyId || null,
+      mustChangePassword: dto.mustChangePassword || false,
+      createdBy: caller.userId,
       isActive: true,
     });
 
@@ -87,7 +103,7 @@ export class AdminUserService {
   /**
    * Update user.
    * Admin: any user, any field.
-   * Manager: only users in their company (that they can see), cannot change role to admin/manager.
+   * Director/Manager: company-scoped, role-scoped.
    */
   async updateUser(id: string, dto: UpdateUserDto, caller: JwtPayload): Promise<UserResponseDto> {
     let user;
@@ -95,16 +111,26 @@ export class AdminUserService {
     if (caller.role === UserRole.ADMIN) {
       user = await userRepository.findById(id);
     } else {
+      // Director + Manager: company scoped
       if (!caller.companyId) throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
       user = await userRepository.findByIdAndCompany(id, caller.companyId);
+      if (!user) throw AppError.notFound(USER_ERRORS.not_found);
 
-      // Manager cannot change role to admin/manager
-      if (dto.role && !MANAGER_ALLOWED_ROLES.includes(dto.role)) {
-        throw AppError.forbidden('Quản lý chỉ có thể gán vai trò giám đốc hoặc nhân viên');
+      const allowedRoles = getAllowedRoles(caller.role);
+
+      // Cannot update user whose role is outside allowed scope
+      if (!allowedRoles.includes(user.role)) {
+        throw AppError.forbidden('Bạn không có quyền chỉnh sửa người dùng này');
       }
-      // Manager cannot move user to another company
+
+      // Cannot assign role outside allowed scope
+      if (dto.role && !allowedRoles.includes(dto.role)) {
+        throw AppError.forbidden('Bạn không có quyền gán vai trò này');
+      }
+
+      // Cannot move user to another company
       if (dto.companyId && dto.companyId !== caller.companyId) {
-        throw AppError.forbidden('Quản lý không thể chuyển nhân viên sang công ty khác');
+        throw AppError.forbidden('Bạn không thể chuyển nhân viên sang công ty khác');
       }
     }
 
@@ -129,7 +155,7 @@ export class AdminUserService {
   /**
    * Delete user.
    * Admin: any user (except self).
-   * Manager: only users in their company (except self).
+   * Director/Manager: company-scoped, role-scoped (except self).
    */
   async deleteUser(id: string, caller: JwtPayload): Promise<void> {
     if (id === caller.userId) {
@@ -146,9 +172,12 @@ export class AdminUserService {
 
     if (!user) throw AppError.notFound(USER_ERRORS.not_found);
 
-    // Manager cannot delete admin or other managers
-    if (caller.role === UserRole.MANAGER && !MANAGER_ALLOWED_ROLES.includes(user.role)) {
-      throw AppError.forbidden('Quản lý không thể xoá tài khoản admin hoặc quản lý khác');
+    // Director/Manager: can only delete users within allowed roles
+    if (caller.role !== UserRole.ADMIN) {
+      const allowedRoles = getAllowedRoles(caller.role);
+      if (!allowedRoles.includes(user.role)) {
+        throw AppError.forbidden('Bạn không có quyền xoá người dùng này');
+      }
     }
 
     await userRepository.softDelete(id);
