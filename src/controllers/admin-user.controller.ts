@@ -8,7 +8,8 @@ export class AdminUserController {
     try {
       const page = parseInt(req.query['page'] as string, 10) || 1;
       const limit = parseInt(req.query['limit'] as string, 10) || 10;
-      const result = await adminUserService.getAllUsers(page, limit, req.user!);
+      const search = (req.query['search'] as string)?.trim() || undefined;
+      const result = await adminUserService.getAllUsers(page, limit, req.user!, search);
       responseUtil.paginated(res, result.data, {
         total: result.total,
         page: result.page,

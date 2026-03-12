@@ -1,6 +1,6 @@
 # API Guide - Chat Channel API
 
-Base URL: `http://localhost:3001/api`
+Base URL: `https://beoperischat.operis.vn/api`
 
 ---
 
@@ -657,7 +657,7 @@ x-api-key: ck_a1b2c3d4e5f6g7h8i9j0...
 
 **Example:**
 ```bash
-curl -H "x-api-key: ck_your_key_here" http://localhost:3001/api/auth/profile
+curl -H "x-api-key: ck_your_key_here" https://beoperischat.operis.vn/api/auth/profile
 ```
 
 Auth priority: Cookie first → API key fallback → 401
@@ -728,6 +728,6 @@ All errors follow this format:
 
 ## 10. Swagger Docs
 
-Interactive API docs: `http://localhost:3001/api/docs`
+Interactive API docs: `https://beoperischat.operis.vn/api/docs`
 
-JSON spec: `http://localhost:3001/api/docs.json`
+JSON spec: `https://beoperischat.operis.vn/api/docs.json`

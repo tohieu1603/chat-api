@@ -19,16 +19,17 @@ export class AdminUserService {
     page: number,
     limit: number,
     caller: JwtPayload,
+    search?: string,
   ): Promise<{ data: UserResponseDto[]; total: number; page: number; limit: number }> {
     let users: any[];
     let total: number;
 
     if (caller.role === UserRole.ADMIN) {
-      [users, total] = await userRepository.findAllPaginated(page, limit);
+      [users, total] = await userRepository.findAllPaginated(page, limit, search);
     } else {
       // Manager: scoped to their company
       if (!caller.companyId) throw AppError.forbidden('You are not assigned to any company');
-      [users, total] = await userRepository.findByCompanyPaginated(caller.companyId, page, limit);
+      [users, total] = await userRepository.findByCompanyPaginated(caller.companyId, page, limit, search);
     }
 
     return { data: users.map(UserResponseDto.fromEntity), total, page, limit };

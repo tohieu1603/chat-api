@@ -21,20 +21,40 @@ export class UserRepository {
     return this.repository.findOne({ where: { id } });
   }
 
-  async findAllPaginated(page: number, limit: number): Promise<[User[], number]> {
+  async findAllPaginated(page: number, limit: number, search?: string): Promise<[User[], number]> {
     const skip = (page - 1) * limit;
-    return this.repository.findAndCount({ skip, take: limit, order: { createdAt: 'DESC' } });
+    const qb = this.repository.createQueryBuilder('user')
+      .skip(skip)
+      .take(limit)
+      .orderBy('user.createdAt', 'DESC');
+
+    if (search) {
+      qb.where(
+        '(user.email ILIKE :search OR user.full_name ILIKE :search OR user.position ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    return qb.getManyAndCount();
   }
 
   // Company-scoped: get users in a specific company
-  async findByCompanyPaginated(companyId: string, page: number, limit: number): Promise<[User[], number]> {
+  async findByCompanyPaginated(companyId: string, page: number, limit: number, search?: string): Promise<[User[], number]> {
     const skip = (page - 1) * limit;
-    return this.repository.findAndCount({
-      where: { companyId },
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const qb = this.repository.createQueryBuilder('user')
+      .where('user.company_id = :companyId', { companyId })
+      .skip(skip)
+      .take(limit)
+      .orderBy('user.createdAt', 'DESC');
+
+    if (search) {
+      qb.andWhere(
+        '(user.email ILIKE :search OR user.full_name ILIKE :search OR user.position ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    return qb.getManyAndCount();
   }
 
   // Company-scoped: find user by id and companyId (IDOR safe for managers)
