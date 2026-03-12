@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
-import { authRateLimiter } from '../middlewares/rate-limiter.middleware';
 import { validateDto } from '../middlewares/validation.middleware';
 import { RegisterDto, LoginDto } from '../dtos/auth.dto';
 
@@ -34,7 +33,7 @@ const router = Router();
  *       400:
  *         description: Validation error or email already exists
  */
-router.post('/register', authRateLimiter, validateDto(RegisterDto), (req, res, next) => authController.register(req, res, next));
+router.post('/register', validateDto(RegisterDto), (req, res, next) => authController.register(req, res, next));
 
 /**
  * @swagger
@@ -68,7 +67,7 @@ router.post('/register', authRateLimiter, validateDto(RegisterDto), (req, res, n
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', authRateLimiter, validateDto(LoginDto), (req, res, next) => authController.login(req, res, next));
+router.post('/login', validateDto(LoginDto), (req, res, next) => authController.login(req, res, next));
 
 /**
  * @swagger

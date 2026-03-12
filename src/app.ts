@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { envConfig } from './config/env.config';
 import { swaggerSpec } from './config/swagger.config';
-import { errorHandler, apiRateLimiter, requestLogger } from './middlewares';
+import { errorHandler, requestLogger } from './middlewares';
 import authRoutes from './routes/auth.routes';
 import adminUserRoutes from './routes/admin-user.routes';
 import apiKeyRoutes from './routes/api-key.routes';
@@ -14,7 +14,10 @@ import apiKeyRoutes from './routes/api-key.routes';
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors({ origin: envConfig.cors.origin, credentials: true }));
 app.use(cookieParser());
 
@@ -22,9 +25,8 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Logging & rate limiting
+// Logging
 app.use(requestLogger);
-app.use('/api', apiRateLimiter);
 
 // Health check
 app.get('/health', (_req, res) => {
