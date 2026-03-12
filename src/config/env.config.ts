@@ -22,6 +22,10 @@ export const envConfig = {
     secure: process.env.COOKIE_SECURE === 'true',
     sameSite: (process.env.COOKIE_SAME_SITE || 'lax') as 'lax' | 'strict' | 'none',
   },
+  byteplus: {
+    apiUrl: process.env.BYTEPLUS_API_URL || 'https://ark.ap-southeast.bytepluses.com/api/coding/v3',
+    apiKey: process.env.BYTEPLUS_API_KEY || '',
+  },
   cors: {
     // Comma-separated origins: "http://localhost:3000,http://localhost:50051"
     origin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(o => o.trim()),
