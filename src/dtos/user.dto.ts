@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsEnum, IsBoolean } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsEnum, IsBoolean, IsUUID } from 'class-validator';
 import { UserRole } from '../constants/roles.constant';
 import { User } from '../entities/user.entity';
 
@@ -18,6 +18,15 @@ export class CreateUserDto {
 
   @IsEnum(UserRole, { message: 'Invalid user role' })
   role!: UserRole;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  position?: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Invalid company ID' })
+  companyId?: string;
 }
 
 export class UpdateUserDto {
@@ -38,6 +47,15 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  position?: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Invalid company ID' })
+  companyId?: string;
 }
 
 export class UserResponseDto {
@@ -46,6 +64,8 @@ export class UserResponseDto {
   fullName!: string;
   role!: UserRole;
   isActive!: boolean;
+  position?: string | null;
+  companyId?: string | null;
   createdAt!: Date;
   updatedAt!: Date;
 
@@ -56,6 +76,8 @@ export class UserResponseDto {
     dto.fullName = user.fullName;
     dto.role = user.role;
     dto.isActive = user.isActive;
+    dto.position = user.position ?? null;
+    dto.companyId = user.companyId ?? null;
     dto.createdAt = user.createdAt;
     dto.updatedAt = user.updatedAt;
     return dto;

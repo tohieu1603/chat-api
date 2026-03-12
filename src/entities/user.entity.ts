@@ -1,6 +1,7 @@
-import { Entity, Column, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, Column, BeforeInsert, BeforeUpdate, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { UserRole } from '../constants/roles.constant';
+import { Company } from './company.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -18,6 +19,16 @@ export class User extends BaseEntity {
 
   @Column({ name: 'is_active', default: true })
   isActive!: boolean;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  position?: string | null;
+
+  @Column({ name: 'company_id', type: 'uuid', nullable: true })
+  companyId?: string | null;
+
+  @ManyToOne(() => Company, (company) => company.users, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'company_id' })
+  company?: Company | null;
 
   @BeforeInsert()
   @BeforeUpdate()

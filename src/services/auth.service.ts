@@ -26,8 +26,8 @@ interface TokenMeta {
 }
 
 export class AuthService {
-  private buildPayload(user: { id: string; email: string; role: UserRole }): JwtPayload {
-    return { userId: user.id, email: user.email, role: user.role };
+  private buildPayload(user: { id: string; email: string; role: UserRole; companyId?: string | null }): JwtPayload {
+    return { userId: user.id, email: user.email, role: user.role, companyId: user.companyId ?? null };
   }
 
   /**
@@ -35,7 +35,7 @@ export class AuthService {
    * Each login creates a new "family" for token rotation detection.
    */
   private async generateAndStoreTokens(
-    user: { id: string; email: string; role: UserRole },
+    user: { id: string; email: string; role: UserRole; companyId?: string | null },
     family: string,
     meta?: TokenMeta,
   ): Promise<{ accessToken: string; refreshToken: string }> {

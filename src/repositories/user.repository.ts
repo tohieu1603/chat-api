@@ -26,6 +26,22 @@ export class UserRepository {
     return this.repository.findAndCount({ skip, take: limit, order: { createdAt: 'DESC' } });
   }
 
+  // Company-scoped: get users in a specific company
+  async findByCompanyPaginated(companyId: string, page: number, limit: number): Promise<[User[], number]> {
+    const skip = (page - 1) * limit;
+    return this.repository.findAndCount({
+      where: { companyId },
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Company-scoped: find user by id and companyId (IDOR safe for managers)
+  async findByIdAndCompany(id: string, companyId: string): Promise<User | null> {
+    return this.repository.findOne({ where: { id, companyId } });
+  }
+
   async save(user: User): Promise<User> {
     return this.repository.save(user);
   }

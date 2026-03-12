@@ -10,6 +10,7 @@ import { errorHandler, requestLogger } from './middlewares';
 import authRoutes from './routes/auth.routes';
 import adminUserRoutes from './routes/admin-user.routes';
 import apiKeyRoutes from './routes/api-key.routes';
+import companyRoutes from './routes/company.routes';
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.get('/api/docs.json', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
+app.use('/api/companies', companyRoutes);
 
 // 404 handler
 app.use((_req, res) => {

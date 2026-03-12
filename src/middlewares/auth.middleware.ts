@@ -31,7 +31,7 @@ export async function authenticateToken(req: Request, _res: Response, next: Next
       if (result) {
         const user = await userRepository.findById(result.userId);
         if (user && user.isActive) {
-          req.user = { userId: user.id, email: user.email, role: user.role };
+          req.user = { userId: user.id, email: user.email, role: user.role, companyId: user.companyId ?? null };
           return next();
         }
       }
