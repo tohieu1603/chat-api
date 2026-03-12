@@ -48,7 +48,7 @@ app.use('/api/companies', companyRoutes);
 
 // 404 handler
 app.use((_req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
+  res.status(404).json({ success: false, message: 'Đường dẫn không tồn tại' });
 });
 
 // Error handler (must be last)

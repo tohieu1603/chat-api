@@ -6,7 +6,7 @@ export const authRateLimiter = rateLimit({
   max: 10, // 10 requests per window
   message: {
     success: false,
-    message: 'Too many requests, please try again later',
+    message: 'Quá nhiều yêu cầu, vui lòng thử lại sau',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -18,7 +18,7 @@ export const apiRateLimiter = rateLimit({
   max: 100,
   message: {
     success: false,
-    message: 'Too many requests, please try again later',
+    message: 'Quá nhiều yêu cầu, vui lòng thử lại sau',
   },
   standardHeaders: true,
   legacyHeaders: false,

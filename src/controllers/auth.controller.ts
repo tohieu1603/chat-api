@@ -30,7 +30,7 @@ export class AuthController {
       const dto = req.body as LoginDto;
       const result = await authService.login(dto, extractMeta(req));
       cookieUtil.setTokens(res, result.accessToken, result.refreshToken);
-      responseUtil.success(res, result.user, 'Login successful');
+      responseUtil.success(res, result.user, 'Đăng nhập thành công');
     } catch (err) {
       next(err);
     }
@@ -40,7 +40,7 @@ export class AuthController {
     try {
       await authService.logout(req.user!.userId);
       cookieUtil.clearTokens(res);
-      responseUtil.success(res, null, 'Logged out');
+      responseUtil.success(res, null, 'Đăng xuất thành công');
     } catch (err) {
       next(err);
     }
@@ -54,7 +54,7 @@ export class AuthController {
       }
       const tokens = await authService.refreshTokens(refreshToken, extractMeta(req));
       cookieUtil.setTokens(res, tokens.accessToken, tokens.refreshToken);
-      responseUtil.success(res, null, 'Tokens refreshed');
+      responseUtil.success(res, null, 'Làm mới phiên đăng nhập thành công');
     } catch (err) {
       next(err);
     }

@@ -3,12 +3,12 @@ import { ApiKey } from '../entities/api-key.entity';
 
 export class CreateApiKeyDto {
   @IsString()
-  @MinLength(1, { message: 'API key name is required' })
+  @MinLength(1, { message: 'Tên API key là bắt buộc' })
   @MaxLength(100)
   name!: string;
 
   @IsOptional()
-  @IsDateString({}, { message: 'Invalid expiration date format' })
+  @IsDateString({}, { message: 'Định dạng ngày hết hạn không hợp lệ' })
   expiresAt?: string;
 }
 

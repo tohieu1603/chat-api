@@ -3,8 +3,8 @@ import { AppError } from '../utils/app-error.util';
 import { CreateCompanyDto, UpdateCompanyDto, CompanyResponseDto } from '../dtos/company.dto';
 
 const COMPANY_ERRORS = {
-  not_found: 'Company not found',
-  name_taken: 'Company name already exists',
+  not_found: 'Không tìm thấy công ty',
+  name_taken: 'Tên công ty đã tồn tại',
 };
 
 export class CompanyService {

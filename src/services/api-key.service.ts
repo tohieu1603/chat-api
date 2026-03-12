@@ -5,11 +5,11 @@ import { AppError } from '../utils/app-error.util';
 import { CreateApiKeyDto, ApiKeyResponseDto, ApiKeyCreatedResponseDto } from '../dtos/api-key.dto';
 
 const API_KEY_ERRORS = {
-  not_found: 'API key not found',
-  already_revoked: 'API key is already revoked',
-  expired: 'API key has expired',
-  inactive: 'API key is inactive',
-  user_not_found: 'User not found',
+  not_found: 'Không tìm thấy API key',
+  already_revoked: 'API key đã bị thu hồi',
+  expired: 'API key đã hết hạn',
+  inactive: 'API key không hoạt động',
+  user_not_found: 'Không tìm thấy người dùng',
 } as const;
 
 export class ApiKeyService {

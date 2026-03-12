@@ -28,7 +28,7 @@ export class AdminUserService {
       [users, total] = await userRepository.findAllPaginated(page, limit, search);
     } else {
       // Manager: scoped to their company
-      if (!caller.companyId) throw AppError.forbidden('You are not assigned to any company');
+      if (!caller.companyId) throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
       [users, total] = await userRepository.findByCompanyPaginated(caller.companyId, page, limit, search);
     }
 
@@ -63,9 +63,9 @@ export class AdminUserService {
     // Manager restrictions
     if (caller.role === UserRole.MANAGER) {
       if (!MANAGER_ALLOWED_ROLES.includes(dto.role)) {
-        throw AppError.forbidden('Managers can only create director or employee accounts');
+        throw AppError.forbidden('Quản lý chỉ có thể tạo tài khoản giám đốc hoặc nhân viên');
       }
-      if (!caller.companyId) throw AppError.forbidden('You are not assigned to any company');
+      if (!caller.companyId) throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
       // Force company to manager's company
       dto.companyId = caller.companyId;
     }
@@ -95,16 +95,16 @@ export class AdminUserService {
     if (caller.role === UserRole.ADMIN) {
       user = await userRepository.findById(id);
     } else {
-      if (!caller.companyId) throw AppError.forbidden('You are not assigned to any company');
+      if (!caller.companyId) throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
       user = await userRepository.findByIdAndCompany(id, caller.companyId);
 
       // Manager cannot change role to admin/manager
       if (dto.role && !MANAGER_ALLOWED_ROLES.includes(dto.role)) {
-        throw AppError.forbidden('Managers can only assign director or employee roles');
+        throw AppError.forbidden('Quản lý chỉ có thể gán vai trò giám đốc hoặc nhân viên');
       }
       // Manager cannot move user to another company
       if (dto.companyId && dto.companyId !== caller.companyId) {
-        throw AppError.forbidden('Managers cannot move users to another company');
+        throw AppError.forbidden('Quản lý không thể chuyển nhân viên sang công ty khác');
       }
     }
 
@@ -140,7 +140,7 @@ export class AdminUserService {
     if (caller.role === UserRole.ADMIN) {
       user = await userRepository.findById(id);
     } else {
-      if (!caller.companyId) throw AppError.forbidden('You are not assigned to any company');
+      if (!caller.companyId) throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
       user = await userRepository.findByIdAndCompany(id, caller.companyId);
     }
 
@@ -148,7 +148,7 @@ export class AdminUserService {
 
     // Manager cannot delete admin or other managers
     if (caller.role === UserRole.MANAGER && !MANAGER_ALLOWED_ROLES.includes(user.role)) {
-      throw AppError.forbidden('Managers cannot delete admin or manager accounts');
+      throw AppError.forbidden('Quản lý không thể xoá tài khoản admin hoặc quản lý khác');
     }
 
     await userRepository.softDelete(id);

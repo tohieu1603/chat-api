@@ -24,7 +24,7 @@ export const errorHandler = (
   if (err.name === 'QueryFailedError') {
     res.status(400).json({
       success: false,
-      message: 'Database query failed',
+      message: 'Đã xảy ra lỗi, vui lòng thử lại sau',
     });
     return;
   }
@@ -33,7 +33,7 @@ export const errorHandler = (
   if (err instanceof SyntaxError && 'body' in err) {
     res.status(400).json({
       success: false,
-      message: 'Invalid JSON in request body',
+      message: 'Dữ liệu gửi lên không hợp lệ',
     });
     return;
   }
@@ -41,6 +41,6 @@ export const errorHandler = (
   // Unknown errors
   res.status(500).json({
     success: false,
-    message: 'Internal server error',
+    message: 'Đã xảy ra lỗi, vui lòng thử lại sau',
   });
 };

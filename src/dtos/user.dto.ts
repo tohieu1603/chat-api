@@ -3,11 +3,11 @@ import { UserRole } from '../constants/roles.constant';
 import { User } from '../entities/user.entity';
 
 export class CreateUserDto {
-  @IsEmail({}, { message: 'Invalid email format' })
+  @IsEmail({}, { message: 'Định dạng email không hợp lệ' })
   email!: string;
 
   @IsString()
-  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
   @MaxLength(100)
   password!: string;
 
@@ -16,7 +16,7 @@ export class CreateUserDto {
   @MaxLength(100)
   fullName!: string;
 
-  @IsEnum(UserRole, { message: 'Invalid user role' })
+  @IsEnum(UserRole, { message: 'Vai trò không hợp lệ' })
   role!: UserRole;
 
   @IsOptional()
@@ -25,13 +25,13 @@ export class CreateUserDto {
   position?: string;
 
   @IsOptional()
-  @IsUUID('4', { message: 'Invalid company ID' })
+  @IsUUID('4', { message: 'Mã công ty không hợp lệ' })
   companyId?: string;
 }
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsEmail({}, { message: 'Invalid email format' })
+  @IsEmail({}, { message: 'Định dạng email không hợp lệ' })
   email?: string;
 
   @IsOptional()
@@ -41,7 +41,7 @@ export class UpdateUserDto {
   fullName?: string;
 
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Invalid user role' })
+  @IsEnum(UserRole, { message: 'Vai trò không hợp lệ' })
   role?: UserRole;
 
   @IsOptional()
@@ -54,7 +54,7 @@ export class UpdateUserDto {
   position?: string;
 
   @IsOptional()
-  @IsUUID('4', { message: 'Invalid company ID' })
+  @IsUUID('4', { message: 'Mã công ty không hợp lệ' })
   companyId?: string;
 }
 

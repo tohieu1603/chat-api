@@ -53,7 +53,7 @@ export class AdminUserController {
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       await adminUserService.deleteUser(req.params['id'] as string, req.user!);
-      responseUtil.success(res, null, 'User deleted successfully');
+      responseUtil.success(res, null, 'Xoá người dùng thành công');
     } catch (err) {
       next(err);
     }

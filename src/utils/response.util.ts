@@ -2,12 +2,12 @@ import { Response } from 'express';
 import { ApiResponse, PaginatedResponse } from '../interfaces';
 
 export const responseUtil = {
-  success<T>(res: Response, data: T, message = 'Success', statusCode = 200): void {
+  success<T>(res: Response, data: T, message = 'Thành công', statusCode = 200): void {
     const response: ApiResponse<T> = { success: true, message, data };
     res.status(statusCode).json(response);
   },
 
-  created<T>(res: Response, data: T, message = 'Created successfully'): void {
+  created<T>(res: Response, data: T, message = 'Tạo thành công'): void {
     this.success(res, data, message, 201);
   },
 
@@ -15,7 +15,7 @@ export const responseUtil = {
     res.status(204).send();
   },
 
-  paginated<T>(res: Response, data: T[], meta: PaginatedResponse<T>['meta'], message = 'Success'): void {
+  paginated<T>(res: Response, data: T[], meta: PaginatedResponse<T>['meta'], message = 'Thành công'): void {
     const response: PaginatedResponse<T> = { success: true, message, data, meta };
     res.status(200).json(response);
   },

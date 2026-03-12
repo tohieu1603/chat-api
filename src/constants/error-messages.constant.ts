@@ -1,28 +1,28 @@
 export const AUTH_ERRORS = {
-  invalid_credentials: 'Invalid email or password',
-  token_expired: 'Token has expired',
-  token_invalid: 'Token is invalid',
-  unauthorized: 'Unauthorized access',
-  forbidden: 'Access forbidden',
-  email_taken: 'Email is already taken',
-  refresh_token_invalid: 'Refresh token is invalid or expired',
+  invalid_credentials: 'Email hoặc mật khẩu không đúng',
+  token_expired: 'Phiên đăng nhập đã hết hạn',
+  token_invalid: 'Phiên đăng nhập không hợp lệ',
+  unauthorized: 'Vui lòng đăng nhập để tiếp tục',
+  forbidden: 'Bạn không có quyền truy cập',
+  email_taken: 'Email đã được sử dụng',
+  refresh_token_invalid: 'Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại',
 } as const;
 
 export const USER_ERRORS = {
-  not_found: 'User not found',
-  already_exists: 'User already exists',
-  invalid_role: 'Invalid user role',
-  cannot_delete_self: 'You cannot delete your own account',
+  not_found: 'Không tìm thấy người dùng',
+  already_exists: 'Người dùng đã tồn tại',
+  invalid_role: 'Vai trò không hợp lệ',
+  cannot_delete_self: 'Bạn không thể xoá tài khoản của chính mình',
 } as const;
 
 export const VALIDATION_ERRORS = {
-  invalid_email: 'Invalid email address',
-  password_too_short: 'Password must be at least 8 characters',
-  required_field: 'This field is required',
+  invalid_email: 'Địa chỉ email không hợp lệ',
+  password_too_short: 'Mật khẩu phải có ít nhất 8 ký tự',
+  required_field: 'Trường này là bắt buộc',
 } as const;
 
 export const GENERAL_ERRORS = {
-  internal_server_error: 'Internal server error',
-  not_found: 'Resource not found',
-  bad_request: 'Bad request',
+  internal_server_error: 'Đã xảy ra lỗi, vui lòng thử lại sau',
+  not_found: 'Không tìm thấy tài nguyên',
+  bad_request: 'Yêu cầu không hợp lệ',
 } as const;
