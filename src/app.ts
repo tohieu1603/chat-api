@@ -13,6 +13,7 @@ import apiKeyRoutes from './routes/api-key.routes';
 import companyRoutes from './routes/company.routes';
 import byteplusProxyRoutes from './routes/byteplus-proxy.routes';
 import mcpRouter from './mcp/mcp-router';
+import reportRoutes from './routes/report.routes';
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/byteplus', byteplusProxyRoutes);
 app.use('/mcp', mcpRateLimiter, mcpRouter);
+app.use('/api/reports', reportRoutes);
 
 // 404 handler
 app.use((_req, res) => {
