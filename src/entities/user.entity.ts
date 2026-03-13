@@ -30,6 +30,16 @@ export class User extends BaseEntity {
   @JoinColumn({ name: 'company_id' })
   company?: Company | null;
 
+  @Column({ name: 'must_change_password', default: false })
+  mustChangePassword!: boolean;
+
+  @Column({ name: 'created_by', type: 'uuid', nullable: true })
+  createdBy?: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'created_by' })
+  creator?: User | null;
+
   @BeforeInsert()
   @BeforeUpdate()
   normalizeEmail(): void {

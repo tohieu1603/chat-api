@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { validateDto } from '../middlewares/validation.middleware';
-import { RegisterDto, LoginDto } from '../dtos/auth.dto';
+import { RegisterDto, LoginDto, ChangePasswordDto } from '../dtos/auth.dto';
 
 const router = Router();
 
@@ -113,6 +113,31 @@ router.post('/refresh', (req, res, next) => authController.refresh(req, res, nex
  *         description: Not authenticated
  */
 router.post('/logout', authenticateToken, (req, res, next) => authController.logout(req, res, next));
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Change password
+ *     description: Changes authenticated user's password. Sets mustChangePassword to false.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ChangePasswordDto'
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       400:
+ *         description: Wrong current password or validation error
+ *       401:
+ *         description: Not authenticated
+ */
+router.post('/change-password', authenticateToken, validateDto(ChangePasswordDto), (req, res, next) => authController.changePassword(req, res, next));
 
 /**
  * @swagger

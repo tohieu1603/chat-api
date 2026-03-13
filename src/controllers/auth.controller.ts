@@ -4,7 +4,7 @@ import { cookieUtil } from '../utils/cookie.util';
 import { responseUtil } from '../utils/response.util';
 import { AppError } from '../utils/app-error.util';
 import { AUTH_ERRORS } from '../constants/error-messages.constant';
-import { RegisterDto, LoginDto } from '../dtos/auth.dto';
+import { RegisterDto, LoginDto, ChangePasswordDto } from '../dtos/auth.dto';
 
 function extractMeta(req: Request) {
   return {
@@ -55,6 +55,16 @@ export class AuthController {
       const tokens = await authService.refreshTokens(refreshToken, extractMeta(req));
       cookieUtil.setTokens(res, tokens.accessToken, tokens.refreshToken);
       responseUtil.success(res, null, 'Làm mới phiên đăng nhập thành công');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { currentPassword, newPassword } = req.body as ChangePasswordDto;
+      await authService.changePassword(req.user!.userId, currentPassword, newPassword);
+      responseUtil.success(res, null, 'Đổi mật khẩu thành công');
     } catch (err) {
       next(err);
     }

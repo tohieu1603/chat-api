@@ -21,6 +21,14 @@ export class UserRepository {
     return this.repository.findOne({ where: { id } });
   }
 
+  async findByIdWithPassword(id: string): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
   async findAllPaginated(page: number, limit: number, search?: string): Promise<[User[], number]> {
     const skip = (page - 1) * limit;
     const qb = this.repository.createQueryBuilder('user')

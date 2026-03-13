@@ -6,6 +6,8 @@ export const AUTH_ERRORS = {
   forbidden: 'Bạn không có quyền truy cập',
   email_taken: 'Email đã được sử dụng',
   refresh_token_invalid: 'Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại',
+  wrong_password: 'Mật khẩu hiện tại không đúng',
+  same_password: 'Mật khẩu mới phải khác mật khẩu hiện tại',
 } as const;
 
 export const USER_ERRORS = {
