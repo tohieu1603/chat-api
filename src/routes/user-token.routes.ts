@@ -78,7 +78,7 @@ router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
  */
 router.get('/log/:userId', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const records = await userTokenRepository.findByUserId(userId);
     responseUtil.success(res, records);
   } catch (error) {
