@@ -26,6 +26,12 @@ export const envConfig = {
     apiUrl: process.env.BYTEPLUS_API_URL || 'https://ark.ap-southeast.bytepluses.com/api/coding/v3',
     apiKey: process.env.BYTEPLUS_API_KEY || '',
   },
+  sepay: {
+    webhookApiKey: process.env.SEPAY_WEBHOOK_API_KEY || '',
+    bankCode: process.env.SEPAY_BANK_CODE || 'BIDV',
+    bankAccount: process.env.SEPAY_BANK_ACCOUNT || '',
+    accountName: process.env.SEPAY_ACCOUNT_NAME || '',
+  },
   cors: {
     // Comma-separated origins: "http://localhost:3000,http://localhost:50051"
     origin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(o => o.trim()),

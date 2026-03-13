@@ -16,6 +16,9 @@ export class Company extends BaseEntity {
   @Column({ length: 50, nullable: true, type: 'varchar' })
   phone?: string | null;
 
+  @Column({ name: 'token_balance', type: 'bigint', default: 0 })
+  tokenBalance!: number;
+
   @Column({ name: 'is_active', default: true })
   isActive!: boolean;
 

@@ -23,6 +23,9 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 100, nullable: true })
   position?: string | null;
 
+  @Column({ name: 'token_balance', type: 'bigint', default: 0 })
+  tokenBalance!: number;
+
   @Column({ name: 'company_id', type: 'uuid', nullable: true })
   companyId?: string | null;
 
