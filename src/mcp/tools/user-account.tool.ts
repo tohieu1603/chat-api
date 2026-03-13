@@ -10,6 +10,12 @@ import { JwtPayload } from '../../interfaces/jwt-payload.interface';
 import { AppDataSource } from '../../config/database.config';
 import { Company } from '../../entities/company.entity';
 
+// Roles each caller level can create (same logic as admin-user.service)
+const ALLOWED_ROLES: Record<string, UserRole[]> = {
+  [UserRole.DIRECTOR]: [UserRole.MANAGER, UserRole.EMPLOYEE],
+  [UserRole.MANAGER]: [UserRole.EMPLOYEE],
+};
+
 const inputSchema = {
   email: z
     .string()
@@ -21,18 +27,17 @@ const inputSchema = {
     .min(2)
     .describe('Họ và tên đầy đủ của người dùng (bắt buộc).'),
   role: z
-    .enum(['director', 'manager', 'employee'])
+    .enum(['manager', 'employee'])
     .describe(
       'Vai trò: '
-      + '"director" = giám đốc (quản lý manager + employee cùng company), '
       + '"manager" = quản lý (quản lý employee cùng company), '
       + '"employee" = nhân viên (không có quyền quản lý). '
-      + 'Chọn dựa trên chức vụ thực tế của người dùng.',
+      + 'Lưu ý: Director chỉ có thể tạo manager hoặc employee. Manager chỉ có thể tạo employee.',
     ),
   position: z
     .string()
     .optional()
-    .describe('Chức vụ cụ thể, ví dụ: "Giám đốc kinh doanh", "Trưởng phòng IT".'),
+    .describe('Chức vụ cụ thể, ví dụ: "Trưởng phòng IT", "Nhân viên kỹ thuật".'),
 };
 
 export function registerCreateUserTool(server: McpServer, getCaller: () => JwtPayload): void {
@@ -40,7 +45,8 @@ export function registerCreateUserTool(server: McpServer, getCaller: () => JwtPa
     'create_user_account',
     'Tạo tài khoản người dùng mới trong cùng công ty với người gọi. '
     + 'Mật khẩu mặc định được gán tự động, người dùng phải đổi mật khẩu khi đăng nhập lần đầu. '
-    + 'Email có thể bỏ trống để hệ thống tự sinh từ họ tên + tên công ty.',
+    + 'Email có thể bỏ trống để hệ thống tự sinh từ họ tên + tên công ty. '
+    + 'Director tạo được manager + employee. Manager chỉ tạo được employee.',
     inputSchema,
     async (params) => {
       const caller = getCaller();
@@ -48,6 +54,15 @@ export function registerCreateUserTool(server: McpServer, getCaller: () => JwtPa
       if (!caller.companyId) {
         return {
           content: [{ type: 'text' as const, text: 'Lỗi: Người gọi chưa được gán vào công ty nào.' }],
+          isError: true,
+        };
+      }
+
+      // Validate caller can create this role
+      const allowedRoles = ALLOWED_ROLES[caller.role] || [];
+      if (!allowedRoles.includes(params.role as UserRole)) {
+        return {
+          content: [{ type: 'text' as const, text: `Lỗi: Bạn (${caller.role}) không có quyền tạo tài khoản với vai trò "${params.role}".` }],
           isError: true,
         };
       }

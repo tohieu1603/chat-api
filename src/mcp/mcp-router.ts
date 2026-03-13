@@ -10,8 +10,8 @@ import { registerListRolesTool } from './tools/role-list.tool';
 
 const router = Router();
 
-// Auth: only ADMIN can access MCP endpoint
-const guard = [authenticateToken, authorizeRoles(UserRole.ADMIN)];
+// Auth: Director + Manager can use MCP tools (admin has separate API at /api/admin/users)
+const guard = [authenticateToken, authorizeRoles(UserRole.DIRECTOR, UserRole.MANAGER)];
 
 /**
  * Stateless MCP endpoint.
@@ -28,7 +28,7 @@ router.post('/', ...guard, async (req: Request, res: Response) => {
 
     // Register tools with caller context
     registerCreateUserTool(server, () => caller);
-    registerListRolesTool(server);
+    registerListRolesTool(server, () => caller);
 
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

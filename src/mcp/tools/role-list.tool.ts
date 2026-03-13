@@ -1,4 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { UserRole } from '../../constants/roles.constant';
+import { JwtPayload } from '../../interfaces/jwt-payload.interface';
 
 interface RoleInfo {
   role: string;
@@ -7,13 +9,7 @@ interface RoleInfo {
   canManage: string[];
 }
 
-const ROLES: RoleInfo[] = [
-  {
-    role: 'director',
-    level: 3,
-    description: 'Giám đốc company - quản lý manager và employee cùng company',
-    canManage: ['manager', 'employee'],
-  },
+const ALL_ROLES: RoleInfo[] = [
   {
     role: 'manager',
     level: 2,
@@ -28,22 +24,33 @@ const ROLES: RoleInfo[] = [
   },
 ];
 
-export function registerListRolesTool(server: McpServer): void {
+// Roles each caller can assign
+const ASSIGNABLE: Record<string, string[]> = {
+  [UserRole.DIRECTOR]: ['manager', 'employee'],
+  [UserRole.MANAGER]: ['employee'],
+};
+
+export function registerListRolesTool(server: McpServer, getCaller: () => JwtPayload): void {
   server.tool(
     'list_roles',
-    'Danh sách vai trò có thể gán khi tạo tài khoản. '
-    + 'Director (giám đốc) quản lý manager + employee. '
-    + 'Manager (quản lý) quản lý employee. '
-    + 'Employee (nhân viên) không có quyền quản lý. '
-    + 'KHÔNG bao gồm admin (chỉ dùng hệ thống).',
+    'Danh sách vai trò mà bạn có thể gán khi tạo tài khoản. '
+    + 'Kết quả phụ thuộc vào quyền của người gọi: '
+    + 'Director tạo được manager + employee. '
+    + 'Manager chỉ tạo được employee.',
     {},
-    async () => ({
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify(ROLES, null, 2),
-        },
-      ],
-    }),
+    async () => {
+      const caller = getCaller();
+      const allowed = ASSIGNABLE[caller.role] || [];
+      const filtered = ALL_ROLES.filter((r) => allowed.includes(r.role));
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(filtered, null, 2),
+          },
+        ],
+      };
+    },
   );
 }
