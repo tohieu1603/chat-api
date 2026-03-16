@@ -6,6 +6,7 @@ import { authorizeRoles } from '../middlewares/role-guard.middleware';
 import { UserRole } from '../constants/roles.constant';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { registerCreateUserTool } from './tools/user-account.tool';
+import { registerBatchCreateUsersTool } from './tools/batch-user-account.tool';
 import { registerListRolesTool } from './tools/role-list.tool';
 
 const router = Router();
@@ -28,6 +29,7 @@ router.post('/', ...guard, async (req: Request, res: Response) => {
 
     // Register tools with caller context
     registerCreateUserTool(server, () => caller);
+    registerBatchCreateUsersTool(server, () => caller);
     registerListRolesTool(server, () => caller);
 
     const transport = new StreamableHTTPServerTransport({

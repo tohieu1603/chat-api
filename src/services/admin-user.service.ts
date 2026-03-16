@@ -5,6 +5,10 @@ import { AUTH_ERRORS, USER_ERRORS } from '../constants/error-messages.constant';
 import { UserRole } from '../constants/roles.constant';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from '../dtos/user.dto';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { generateEmail } from '../utils/email-generator.util';
+import { envConfig } from '../config/env.config';
+import { AppDataSource } from '../config/database.config';
+import { Company } from '../entities/company.entity';
 
 // Director can manage manager + employee in same company
 const DIRECTOR_ALLOWED_ROLES: UserRole[] = [UserRole.MANAGER, UserRole.EMPLOYEE];
@@ -150,6 +154,70 @@ export class AdminUserService {
 
     const saved = await userRepository.save(user);
     return UserResponseDto.fromEntity(saved);
+  }
+
+  /**
+   * Batch create users with auto email generation and default password.
+   * Partial failure: continues creating even if one fails.
+   */
+  async batchCreateUsers(
+    users: Array<{ fullName: string; email?: string; role: string; position?: string }>,
+    caller: JwtPayload,
+  ): Promise<{
+    total: number;
+    created: Array<{ fullName: string; email: string; role: string }>;
+    failed: Array<{ fullName: string; error: string }>;
+  }> {
+    if (!caller.companyId) {
+      throw AppError.forbidden('Bạn chưa được gán vào công ty nào');
+    }
+
+    const companyRepo = AppDataSource.getRepository(Company);
+    const company = await companyRepo.findOne({ where: { id: caller.companyId } });
+    if (!company) throw AppError.notFound('Không tìm thấy công ty');
+
+    const created: Array<{ fullName: string; email: string; role: string }> = [];
+    const failed: Array<{ fullName: string; error: string }> = [];
+
+    for (const u of users) {
+      try {
+        const allowedRoles = getAllowedRoles(caller.role);
+        if (!allowedRoles.includes(u.role as UserRole)) {
+          throw new Error(`Bạn (${caller.role}) không có quyền tạo vai trò "${u.role}"`);
+        }
+
+        let email = u.email;
+        if (!email) {
+          email = await generateEmail(
+            u.fullName,
+            company.name,
+            async (candidate) => (await userRepository.findByEmail(candidate)) !== null,
+          );
+        }
+
+        const existing = await userRepository.findByEmail(email);
+        if (existing) throw new Error(`Email "${email}" đã được sử dụng`);
+
+        const hashedPassword = await hashPassword(envConfig.defaultUserPassword);
+        await userRepository.create({
+          email,
+          password: hashedPassword,
+          fullName: u.fullName,
+          role: u.role as UserRole,
+          position: u.position || null,
+          companyId: caller.companyId,
+          mustChangePassword: true,
+          createdBy: caller.userId,
+          isActive: true,
+        });
+
+        created.push({ fullName: u.fullName, email, role: u.role });
+      } catch (error: any) {
+        failed.push({ fullName: u.fullName, error: error.message || 'Lỗi không xác định' });
+      }
+    }
+
+    return { total: users.length, created, failed };
   }
 
   /**
