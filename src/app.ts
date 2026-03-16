@@ -15,6 +15,8 @@ import byteplusProxyRoutes from './routes/byteplus-proxy.routes';
 import mcpRouter from './mcp/mcp-router';
 import batchUserRoutes from './routes/batch-user.routes';
 import reportRoutes from './routes/report.routes';
+import depositRoutes from './routes/deposit.routes';
+import userTokenRoutes from './routes/user-token.routes';
 
 const app = express();
 
@@ -53,6 +55,8 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/byteplus', byteplusProxyRoutes);
 app.use('/mcp', mcpRateLimiter, mcpRouter);
 app.use('/api/reports', reportRoutes);
+app.use('/api/deposits', depositRoutes);
+app.use('/api/user-tokens', userTokenRoutes);
 
 // 404 handler
 app.use((_req, res) => {

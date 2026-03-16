@@ -71,6 +71,7 @@ export class UserResponseDto {
   position?: string | null;
   companyId?: string | null;
   mustChangePassword!: boolean;
+  tokenBalance!: number;
   createdBy?: string | null;
   createdAt!: Date;
   updatedAt!: Date;
@@ -84,6 +85,7 @@ export class UserResponseDto {
     dto.isActive = user.isActive;
     dto.position = user.position ?? null;
     dto.companyId = user.companyId ?? null;
+    dto.tokenBalance = Number(user.tokenBalance) || 0;
     dto.mustChangePassword = user.mustChangePassword ?? false;
     dto.createdBy = user.createdBy ?? null;
     dto.createdAt = user.createdAt;

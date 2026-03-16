@@ -60,6 +60,8 @@ export class CompanyResponseDto {
   createdAt!: Date;
   updatedAt!: Date;
 
+  tokenBalance!: number;
+
   static fromEntity(entity: Company): CompanyResponseDto {
     const dto = new CompanyResponseDto();
     dto.id = entity.id;
@@ -67,6 +69,7 @@ export class CompanyResponseDto {
     dto.description = entity.description;
     dto.address = entity.address;
     dto.phone = entity.phone;
+    dto.tokenBalance = Number(entity.tokenBalance) || 0;
     dto.isActive = entity.isActive;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
