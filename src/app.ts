@@ -13,6 +13,7 @@ import apiKeyRoutes from './routes/api-key.routes';
 import companyRoutes from './routes/company.routes';
 import byteplusProxyRoutes from './routes/byteplus-proxy.routes';
 import mcpRouter from './mcp/mcp-router';
+import batchUserRoutes from './routes/batch-user.routes';
 import reportRoutes from './routes/report.routes';
 
 const app = express();
@@ -46,6 +47,7 @@ app.get('/api/docs.json', (_req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/admin/users', batchUserRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/byteplus', byteplusProxyRoutes);
